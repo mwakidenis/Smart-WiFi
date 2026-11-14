@@ -34,13 +34,34 @@
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 100; display: none; justify-content: center; align-items: center; }
   .modal { background: #0f172a; border: 1px solid #334155; border-radius: 1rem; padding: 2rem; max-width: 400px; width: 90%; text-align: center; }
   .modal h3 { color: #ffffff; margin-bottom: 1rem; }
+  .theme-toggle { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; padding: 0.6rem 1rem; border-radius: 0.6rem; cursor: pointer; font-weight: 600; margin-left: 0.5rem; }
+  .theme-toggle:hover { opacity: 0.9; }
+  body.light-mode { background: #f8fafc; color: #0f172a; }
+  body.light-mode .card { background: #ffffff; border-color: #e2e8f0; color: #0f172a; }
+  body.light-mode .pkg-card { background: #f1f5f9; border-color: #e2e8f0; color: #0f172a; }
+  body.light-mode .pkg-card h3 { color: #22d3ee; }
+  body.light-mode .pkg-card h4 { color: #22d3ee; }
+  body.light-mode .pkg-card .meta { color: #64748b; }
+  body.light-mode .pkg-card .desc { color: #64748b; }
+  body.light-mode .form-group label { color: #64748b; }
+  body.light-mode .form-group input { background: #f8fafc; color: #0f172a; border-color: #e2e8f0; }
+  body.light-mode .form-group input:focus { border-color: #22d3ee; }
+  body.light-mode .toast { background: #10b981; color: #0f172a; }
+  body.light-mode .toast.error { background: #ef4444; color: #ffffff; }
+  body.light-mode .modal { background: #ffffff; border-color: #e2e8f0; color: #0f172a; }
+  body.light-mode .modal h3 { color: #0f172a; }
+  body.light-mode .btn-secondary { background: #f1f5f9; color: #0f172a; border-color: #e2e8f0; }
+  body.light-mode .btn-primary { background: #22d3ee; color: #0a0a0c; }
 </style>
 </head>
 <body>
 <div class="container">
   <header>
     <h1>Smart Wifi</h1>
-    <button class="btn btn-secondary" onclick="showTab('support')">Support</button>
+    <div style="display:flex; align-items:center; gap:0.5rem;">
+      <button class="btn btn-secondary" onclick="showTab('support')">Support</button>
+      <button class="btn btn-secondary" onclick="toggleTheme()" id="themeToggle">🌙</button>
+    </div>
   </header>
 
   <div class="toast" id="toast"></div>
@@ -124,7 +145,27 @@ function toast(msg, type = '') {
 window.onload = () => {
   loadPackages();
   loadTimeRemaining();
+  initTheme();
 };
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  const toggleBtn = document.getElementById('themeToggle');
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+    toggleBtn.textContent = '☀️';
+  } else {
+    toggleBtn.textContent = '🌙';
+  }
+}
+
+function toggleTheme() {
+  const body = document.body;
+  const toggleBtn = document.getElementById('themeToggle');
+  const isLight = body.classList.toggle('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  toggleBtn.textContent = isLight ? '☀️' : '🌙';
+}
 
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
