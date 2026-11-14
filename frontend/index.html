@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swift WiFi - Pricing</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0a0a0c; color: #e2e8f0; min-height: 100vh; }
+  .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+  h1 { font-size: 1.75rem; background: linear-gradient(to right, #22d3ee, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 0.6rem; cursor: pointer; font-weight: 600; transition: opacity 0.2s; }
+  .btn:hover { opacity: 0.9; }
+  .btn-primary { background: #22d3ee; color: #0a0a0c; }
+  .btn-secondary { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
+  .card { background: #0f172a; border: 1px solid #334155; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+  .pkg-card { background: #1e293b; border-radius: 0.8rem; padding: 1.2rem; text-align: center; border: 1px solid #334155; }
+  .pkg-card h3 { margin-bottom: 0.5rem; color: #22d3ee; }
+  .pkg-card .price { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: block; }
+  .pkg-card .meta { font-size: 0.875rem; color: #94a3b8; margin-bottom: 1rem; }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; margin-bottom: 0.4rem; color: #94a3b8; font-size: 0.875rem; }
+  .form-group input { width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid #334155; background: #0a0a0c; color: #e2e8f0; }
+  .form-group input:focus { outline: none; border-color: #22d3ee; }
+  .toast { position: fixed; top: 1rem; right: 1rem; padding: 0.8rem 1.2rem; background: #10b981; color: #fff; border-radius: 0.6rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; display: none; }
+  .toast.error { background: #ef4444; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Swift WiFi</h1>
+    <div>
+      <button class="btn btn-secondary" onclick="showTab('login')">Login</button>
+      <button class="btn btn-secondary" onclick="showTab('register')">Register</button>
+    </div>
+  </header>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Pricing (DEFAULT LANDING PAGE) -->
+  <div id="tab-pricing" class="tab-content" style="display:block;">
+    <div class="card">
+      <h3 style="margin-bottom:1rem; color:#fff;">Choose a Package</h3>
+      <p style="color:#94a3b8; margin-bottom:1rem;">Internet is time-based — pick your speed and duration.</p>
+      <div class="grid" id="packagesGrid"></div>
+    </div>
+  </div>
+
+  <!-- Auth -->
+  <div id="tab-login" class="tab-content auth" style="display:none;">
+    <div class="card">
+      <h2>Login</h2>
+      <div class="form-group">
+        <label>Email or Phone</label>
+        <input type="text" id="loginId" placeholder="you@example.com or 0712345678" value="user@swiftwifi.local">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" value="user">
+      </div>
+      <button class="btn btn-primary" onclick="handleLogin()">Sign In</button>
+    </div>
+  </div>
+
+  <div id="tab-register" class="tab-content auth" style="display:none;">
+    <div class="card">
+      <h2>Register</h2>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="regName" placeholder="John Doe">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="regEmail" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="regPhone" placeholder="0712345678">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPass" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" onclick="handleRegister()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:4000/api';
+let token = null;
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.getElementById('tab-' + name).style.display = 'block';
+  if (event && event.target) event.target.classList.add('active');
+
+  if (name === 'pricing') loadPackages();
+}
+
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+async function handleRegister() {
+  const name = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const phone = document.getElementById('regPhone').value;
+  const pass = document.getElementById('regPass').value;
+  try {
+    const r = await fetch(API + '/auth/register', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name, email, phone, password: pass })
+    });
+    const d = await r.json();
+    if (r.ok) { toast('Registered! Please login.'); showTab('login'); }
+    else toast(d.error || 'Register failed', 'error');
+  } catch (e) { toast('Network error', 'error'); }
+}
+
+async function handleLogin() {
+  const id = document.getElementById('loginId').value;
+  const pass = document.getElementById('loginPass').value;
+  try {
+    const r = await fetch(API + '/auth/login', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email: id, phone: id, password: pass })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      token = d.token;
+      localStorage.setItem('token', token);
+      toast('Logged in');
+      showTab('pricing');
+    } else toast(d.error || 'Login failed', 'error');
+  } catch (e) { toast('Network error', 'error'); }
+}
+
+// Load token on startup
+window.onload = () => {
+  token = localStorage.getItem('token');
+  showTab('pricing');
+};
+
+async function loadPackages() {
+  const pr = await fetch(API + '/packages');
+  const pd = await pr.json();
+  const grid = document.getElementById('packagesGrid');
+  grid.innerHTML = pd.packages.map(p => `
+    <div class="pkg-card">
+      <h3>${p.name}</h3>
+      <span class="price">KES ${p.price}</span>
+      <div class="meta">${p.speedMbps} Mbps • ${p.durationMin} min</div>
+      <button class="btn btn-primary" onclick="buyPackage('${p.id}', ${p.price})">Buy</button>
+    </div>
+  `).join('');
+}
+
+async function buyPackage(pkgId, price) {
+  if (!token) {
+    toast('Please login to buy a package');
+    showTab('login');
+    return;
+  }
+  const phone = prompt('Enter your phone number (e.g. 0712345678):');
+  if (!phone) return;
+  localStorage.setItem('regPhone', phone);
+  try {
+    const r = await fetch(API + '/mpesa/stk-push', {
+      method: 'POST', headers: {'Content-Type': 'application/json', Authorization: token},
+      body: JSON.stringify({ phone, amount: price, packageId })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      toast('STK Push sent to your phone.');
+    } else toast(d.error || 'Purchase failed', 'error');
+  } catch (e) { toast('Network error', 'error'); }
+}
+</script>
+</body>
+</html>

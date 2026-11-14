@@ -1,0 +1,22 @@
+{
+  "name": "swift-wifi",
+  "version": "1.0.0",
+  "description": "Simple M-Pesa Wi-Fi Hotspot Billing System",
+  "main": "backend/index.js",
+  "scripts": {
+    "backend": "node backend/index.js",
+    "frontend": "npx serve frontend -p 3000",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "deploy": "npx wrangler pages deploy frontend --functions functions --project-name swift-wifi"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "uuid": "^11.0.0",
+    "serve": "^14.2.1",
+    "concurrently": "^8.2.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
