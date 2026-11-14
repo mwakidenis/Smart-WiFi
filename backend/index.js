@@ -232,10 +232,25 @@ app.get('/api/time-remaining', (req, res) => {
   if (!phone) return res.status(400).json({ error: 'phone required' });
   const norm = normalizePhone(phone);
 
+  // Get MAC address from network interfaces
+  const interfaces = os.networkInterfaces();
+  let macAddress = '—';
+  for (const iface of Object.values(interfaces)) {
+    if (iface) {
+      for (const addr of iface) {
+        if (addr.family === 'IPv4' && !addr.internal && addr.mac !== '00:00:00:00:00:00') {
+          macAddress = addr.mac;
+          break;
+        }
+      }
+      if (macAddress !== '—') break;
+    }
+  }
+
   // Find the most recent COMPLETED transaction for this phone
   const txs = transactions.filter(t => t.phone === norm && t.status === 'COMPLETED' && t.expiresAt);
   if (txs.length === 0) {
-    return res.json({ remainingMs: 0, remaining: '0m 0s', expired: true, package: null });
+    return res.json({ remainingMs: 0, remaining: '0m 0s', expired: true, package: null, macAddress });
   }
 
   const tx = txs[txs.length - 1];
@@ -252,7 +267,8 @@ app.get('/api/time-remaining', (req, res) => {
     package: tx.package,
     packageId: tx.packageId,
     durationMin: tx.durationMin,
-    expiresAt: tx.expiresAt
+    expiresAt: tx.expiresAt,
+    macAddress
   });
 });
 
