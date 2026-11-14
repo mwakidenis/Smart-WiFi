@@ -27,6 +27,8 @@
   .form-group input:focus { outline: none; border-color: #22d3ee; }
   .toast { position: fixed; top: 1rem; right: 1rem; padding: 0.8rem 1.2rem; background: #10b981; color: #fff; border-radius: 0.6rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; display: none; }
   .toast.error { background: #ef4444; }
+  .spinner { width: 14px; height: 14px; border: 2px solid #10b981; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 6px auto 0; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -50,6 +52,7 @@
         <div class="pkg-card">
           <h4 style="color:#10b981; margin-bottom:0.5rem;">Connection</h4>
           <div id="connectionDisplay">Checking...</div>
+          <div id="connectionSpinner" class="spinner"></div>
         </div>
         <div class="pkg-card">
           <h4 style="color:#8b5cf6; margin-bottom:0.5rem;">Device MAC</h4>
@@ -123,10 +126,13 @@ async function loadPackages() {
 
 async function loadTimeRemaining() {
   const phone = localStorage.getItem('regPhone') || '';
+  const spinEl = document.getElementById('connectionSpinner');
   const connEl = document.getElementById('connectionDisplay');
+  spinEl.style.display = 'block';
   connEl.textContent = 'Checking...';
   if (!phone) {
     document.getElementById('timeRemainingDisplay').textContent = '—';
+    spinEl.style.display = 'none';
     return;
   }
   try {
@@ -138,6 +144,7 @@ async function loadTimeRemaining() {
     document.getElementById('timeRemainingDisplay').textContent = '—';
     document.getElementById('macDisplay').textContent = '—';
   }
+  spinEl.style.display = 'none';
   const isOnline = navigator.onLine;
   connEl.textContent = isOnline ? '● Online' : '● Offline';
   connEl.style.color = isOnline ? '#10b981' : '#ef4444';
