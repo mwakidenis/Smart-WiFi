@@ -39,6 +39,10 @@ users.push({
 });
 
 // Health
+app.get('/', (_req, res) => {
+  res.json({ service: 'Smart Wifi API', status: 'online', frontend: 'http://localhost:3000' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'swift-wifi-api' });
 });
