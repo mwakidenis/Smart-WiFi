@@ -40,16 +40,16 @@
 
   <div class="toast" id="toast"></div>
 
-  <!-- Pricing (DEFAULT LANDING PAGE) -->
-  <div id="tab-pricing" class="tab-content" style="display:block;">
+  <!-- Pricing -->
+  <div id="tab-pricing" class="tab-content" style="display:none;">
     <div class="card">
       <h3 style="margin-bottom:1rem; color:#fff;">Choose a Package</h3>
       <div class="grid" id="packagesGrid"></div>
     </div>
   </div>
 
-  <!-- Auth -->
-  <div id="tab-login" class="tab-content auth" style="display:none;">
+  <!-- Login (DEFAULT LANDING PAGE) -->
+  <div id="tab-login" class="tab-content auth" style="display:block;">
     <div class="card">
       <h2>Login</h2>
       <div class="form-group">
@@ -145,7 +145,17 @@ async function handleLogin() {
 // Load token on startup
 window.onload = () => {
   token = localStorage.getItem('token');
-  showTab('pricing');
+  if (token) {
+    fetch(API + '/auth/me', { headers: { Authorization: token } })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        document.getElementById('userInfo') && (document.getElementById('userInfo').style.display = 'none');
+        showTab('pricing');
+      })
+      .catch(() => showTab('login'));
+  } else {
+    showTab('login');
+  }
 };
 
 async function loadPackages() {
