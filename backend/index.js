@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
+const os = require('os');
 const { stkPush, parseStkCallback, normalizePhone } = require('./services/mpesa');
 
 const app = express();
@@ -11,6 +12,9 @@ app.use(express.json());
 const users = [];
 const packages = [];
 const transactions = [];
+
+// Server start time for uptime calculation
+const serverStartTime = Date.now();
 
 // Seed default packages — time-based with different speeds
 packages.push(
@@ -35,6 +39,38 @@ users.push({
 // Health
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'swift-wifi-api' });
+});
+
+// Uptime / connection status
+app.get('/api/uptime', (req, res) => {
+  const uptimeMs = Date.now() - serverStartTime;
+  const uptimeSeconds = Math.floor(uptimeMs / 1000);
+  const uptimeMinutes = Math.floor(uptimeSeconds / 60);
+  const uptimeHours = Math.floor(uptimeMinutes / 60);
+
+  // Get MAC address from network interfaces
+  const interfaces = os.networkInterfaces();
+  let macAddress = '—';
+  for (const iface of Object.values(interfaces)) {
+    if (iface) {
+      for (const addr of iface) {
+        if (addr.family === 'IPv4' && !addr.internal && addr.mac !== '00:00:00:00:00:00') {
+          macAddress = addr.mac;
+          break;
+        }
+      }
+      if (macAddress !== '—') break;
+    }
+  }
+
+  res.json({
+    uptime: `${uptimeHours}h ${uptimeMinutes % 60}m ${uptimeSeconds % 60}s`,
+    uptimeSeconds,
+    status: 'online',
+    connection: 'connected',
+    macAddress,
+    serverTime: new Date().toISOString()
+  });
 });
 
 // Register

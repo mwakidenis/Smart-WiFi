@@ -39,8 +39,26 @@
   <!-- Pricing (DEFAULT LANDING PAGE - Free, no login) -->
   <div id="tab-pricing" class="tab-content" style="display:block;">
     <div class="card">
-      <h3 style="margin-bottom:1rem; color:#fff;">Choose a Package</h3>
-      <div class="grid" id="packagesGrid"></div>
+      <h3 style="margin-bottom:1rem; color:#fff;">Network Status</h3>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom:1.5rem;">
+        <div class="pkg-card">
+          <h4 style="color:#22d3ee; margin-bottom:0.5rem;">Uptime</h4>
+          <div class="price" id="uptimeDisplay">—</div>
+        </div>
+        <div class="pkg-card">
+          <h4 style="color:#10b981; margin-bottom:0.5rem;">Connection</h4>
+          <div class="price" style="color:#10b981;">● Connected</div>
+        </div>
+        <div class="pkg-card">
+          <h4 style="color:#8b5cf6; margin-bottom:0.5rem;">Device MAC</h4>
+          <div style="font-family: monospace; font-size: 0.875rem; color:#e2e8f0;" id="macDisplay">—</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1rem;">
+        <h3 style="margin-bottom:1rem; color:#fff;">Choose a Package</h3>
+        <div class="grid" id="packagesGrid"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -58,6 +76,7 @@ function toast(msg, type = '') {
 
 window.onload = () => {
   loadPackages();
+  loadUptime();
 };
 
 async function loadPackages() {
@@ -72,6 +91,18 @@ async function loadPackages() {
       <button class="btn btn-primary" onclick="buyPackage('${p.id}', ${p.price})">Buy</button>
     </div>
   `).join('');
+}
+
+async function loadUptime() {
+  try {
+    const r = await fetch(API + '/uptime');
+    const d = await r.json();
+    document.getElementById('uptimeDisplay').textContent = d.uptime || '—';
+    document.getElementById('macDisplay').textContent = d.macAddress || '—';
+  } catch (e) {
+    document.getElementById('uptimeDisplay').textContent = '—';
+    document.getElementById('macDisplay').textContent = '—';
+  }
 }
 
 async function buyPackage(pkgId, price) {
