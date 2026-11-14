@@ -1,6 +1,6 @@
 # Acknowledgments
 
-Swift WiFi is built with the following open-source technologies:
+Smart Wifi is built with the following open-source technologies:
 
 - [Node.js](https://nodejs.org/) - JavaScript runtime
 - [Express](https://expressjs.com/) - Web framework
@@ -10,3 +10,4 @@ Swift WiFi is built with the following open-source technologies:
 - [PostgreSQL](https://www.postgresql.org/) - Relational database
 
 Special thanks to Safaricom for providing the Daraja API for M-Pesa integration.
+

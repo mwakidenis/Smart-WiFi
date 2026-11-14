@@ -1,6 +1,6 @@
-# Contributing to Swift WiFi
+# Contributing to Smart Wifi
 
-Thank you for considering contributing to Swift WiFi! We welcome contributions from the community.
+Thank you for considering contributing to Smart Wifi! We welcome contributions from the community.
 
 ## Getting Started
 
@@ -59,3 +59,4 @@ Use GitHub Issues to report bugs or request features. Please include:
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.
+

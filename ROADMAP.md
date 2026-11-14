@@ -1,4 +1,4 @@
-# Swift WiFi Roadmap
+# Smart Wifi Roadmap
 
 ## Completed (v1.0.0)
 
@@ -31,3 +31,4 @@
 - [ ] Advanced analytics and reporting
 - [ ] API rate limiting tiers per customer
 - [ ] White-label customization
+

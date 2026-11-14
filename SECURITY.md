@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-We take the security of Swift WiFi seriously. If you believe you have found a security vulnerability, please report it to us as described below.
+We take the security of Smart Wifi seriously. If you believe you have found a security vulnerability, please report it to us as described below.
 
 ### Please do not report security vulnerabilities through public GitHub issues.
 
@@ -44,3 +44,4 @@ We follow the principles of coordinated vulnerability disclosure. We will:
 ## M-Pesa / Daraja Credentials
 
 Never commit M-Pesa Consumer Keys, Consumer Secrets, Passkeys, or other credentials to this repository. All secrets must be provided via environment variables only. If you accidentally commit credentials, rotate them immediately.
+

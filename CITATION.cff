@@ -1,10 +1,10 @@
 cff-version: 1.2.0
-message: "If you use Swift WiFi, please cite it as below."
+message: "If you use Smart Wifi, please cite it as below."
 authors:
   - family-names: "Mwakidenis"
     given-names: "Denis"
     orcid: "https://orcid.org/0000-0000-0000-0000"
-title: "Swift WiFi"
+title: "Smart Wifi"
 version: 1.0.0
 date-released: 2026-11-14
 doi: ""
@@ -19,3 +19,4 @@ keywords:
   - STK Push
 license: MIT
 repository-code: "https://github.com/mwakidenis/Swift-WIFI"
+

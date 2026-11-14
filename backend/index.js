@@ -290,7 +290,8 @@ app.get('/api/transactions', (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`Swift WiFi API listening on http://localhost:${PORT}`);
+  console.log(`Smart Wifi API listening on http://localhost:${PORT}`);
   console.log(`  Environment: ${process.env.MPESA_ENVIRONMENT || 'sandbox'}`);
   console.log(`  Shortcode: ${process.env.MPESA_SHORTCODE || '174379 (sandbox default)'}`);
 });
+

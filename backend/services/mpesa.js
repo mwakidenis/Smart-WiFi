@@ -1,4 +1,4 @@
-// Swift WiFi — M-Pesa Daraja STK Push service
+// Smart Wifi — M-Pesa Daraja STK Push service
 // Implements the Safaricom Daraja API pattern.
 //
 // Key invariants:
@@ -200,3 +200,4 @@ module.exports = {
   BASE_URL_PRODUCTION,
   isSandbox,
 };
+

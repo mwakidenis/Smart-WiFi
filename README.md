@@ -1,4 +1,4 @@
-# Swift WiFi
+# Smart Wifi
 
 Simple M-Pesa Wi-Fi Hotspot Billing System.
 
@@ -52,3 +52,4 @@ npx wrangler kv:namespace create "SWIFT_DB"
 # Paste KV IDs into wrangler.toml
 npm run deploy
 ```
+
