@@ -261,13 +261,14 @@ const supportMessages = [];
 
 // Submit support message
 app.post('/api/support', (req, res) => {
-  const { phone, message } = req.body;
+  const { phone, transactionCode, message } = req.body;
   if (!phone || !message) {
     return res.status(400).json({ error: 'phone and message required' });
   }
   const supportMsg = {
     id: uuidv4(),
     phone: normalizePhone(phone),
+    transactionCode,
     message,
     status: 'open',
     createdAt: new Date()

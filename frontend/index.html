@@ -82,6 +82,10 @@
         <input type="tel" id="supportPhone" placeholder="0712345678" value="">
       </div>
       <div class="form-group">
+        <label>Transaction Code</label>
+        <input type="text" id="supportTransactionCode" placeholder="e.g. QB1234567X">
+      </div>
+      <div class="form-group">
         <label>Message</label>
         <textarea id="supportMessage" rows="5" placeholder="Describe your issue..."></textarea>
       </div>
@@ -194,6 +198,7 @@ async function loadTimeRemaining() {
 
 async function sendSupport() {
   const phone = document.getElementById('supportPhone').value;
+  const transactionCode = document.getElementById('supportTransactionCode').value;
   const message = document.getElementById('supportMessage').value;
   if (!phone || !message) {
     toast('Please fill in both fields', 'error');
@@ -202,7 +207,7 @@ async function sendSupport() {
   try {
     const r = await fetch(API + '/support', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ phone, message })
+      body: JSON.stringify({ phone, transactionCode, message })
     });
     const d = await r.json();
     if (r.ok) {
