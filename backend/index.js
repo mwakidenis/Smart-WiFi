@@ -136,6 +136,7 @@ app.post('/api/mpesa/stk-push', async (req, res) => {
       amount: amt,
       package: pkg ? pkg.name : 'Custom',
       packageId: pkg ? pkg.id : null,
+      durationMin: pkg ? pkg.durationMin : null,
       status: 'PENDING',
       checkoutRequestId,
       mpesaReceipt: null,
@@ -204,6 +205,9 @@ app.post('/api/mpesa/callback', (req, res) => {
         tx.mpesaReceipt = receipt;
         tx.amount = amount;
         tx.completedAt = new Date();
+        tx.expiresAt = tx.durationMin
+          ? new Date(tx.completedAt.getTime() + tx.durationMin * 60 * 1000)
+          : null;
         const user = users.find(u => u.phone === phone);
         if (user) user.balance = (user.balance || 0) + amount;
         console.log('[callback] PAID', checkoutRequestID, 'KES', amount, 'receipt:', receipt);
@@ -217,6 +221,36 @@ app.post('/api/mpesa/callback', (req, res) => {
     } catch (err) {
       console.error('[callback processing error]', err.message);
     }
+  });
+});
+
+// Time remaining for active package (by phone)
+app.get('/api/time-remaining', (req, res) => {
+  const { phone } = req.query;
+  if (!phone) return res.status(400).json({ error: 'phone required' });
+  const norm = normalizePhone(phone);
+
+  // Find the most recent COMPLETED transaction for this phone
+  const txs = transactions.filter(t => t.phone === norm && t.status === 'COMPLETED' && t.expiresAt);
+  if (txs.length === 0) {
+    return res.json({ remainingMs: 0, remaining: '0m 0s', expired: true, package: null });
+  }
+
+  const tx = txs[txs.length - 1];
+  const now = Date.now();
+  const remainingMs = Math.max(0, new Date(tx.expiresAt).getTime() - now);
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  res.json({
+    remainingMs,
+    remaining: minutes + 'm ' + seconds + 's',
+    expired: remainingMs <= 0,
+    package: tx.package,
+    packageId: tx.packageId,
+    durationMin: tx.durationMin,
+    expiresAt: tx.expiresAt
   });
 });
 

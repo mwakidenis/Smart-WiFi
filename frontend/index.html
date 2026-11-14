@@ -43,8 +43,8 @@
       <h3 style="margin-bottom:1rem; color:#fff;">Network Status</h3>
       <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom:1.5rem;">
         <div class="pkg-card">
-          <h4 style="color:#22d3ee; margin-bottom:0.5rem;">Uptime</h4>
-          <div class="price" id="uptimeDisplay">—</div>
+          <h4 style="color:#22d3ee; margin-bottom:0.5rem;">Time Remaining</h4>
+          <div class="price" id="timeRemainingDisplay">—</div>
         </div>
         <div class="pkg-card">
           <h4 style="color:#10b981; margin-bottom:0.5rem;">Connection</h4>
@@ -77,7 +77,7 @@ function toast(msg, type = '') {
 
 window.onload = () => {
   loadPackages();
-  loadUptime();
+  loadTimeRemaining();
 };
 
 async function loadPackages() {
@@ -107,19 +107,22 @@ async function loadUptime() {
   setInterval(updateUptimeClock, 1000);
 }
 
-let serverStartTime = null;
-
-function updateUptimeClock() {
-  if (!serverStartTime) return;
-  const now = new Date();
-  const start = new Date(serverStartTime);
-  const diffMs = now - start;
-  const totalSeconds = Math.floor(diffMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  document.getElementById('uptimeDisplay').textContent =
-    hours + 'h ' + minutes + 'm ' + seconds + 's';
+async function loadTimeRemaining() {
+  const phone = localStorage.getItem('regPhone') || '';
+  if (!phone) {
+    document.getElementById('timeRemainingDisplay').textContent = '—';
+    return;
+  }
+  try {
+    const r = await fetch(API + '/time-remaining?phone=' + encodeURIComponent(phone));
+    const d = await r.json();
+    document.getElementById('timeRemainingDisplay').textContent = d.remaining || '—';
+    document.getElementById('macDisplay').textContent = d.macAddress || '—';
+  } catch (e) {
+    document.getElementById('timeRemainingDisplay').textContent = '—';
+    document.getElementById('macDisplay').textContent = '—';
+  }
+  setInterval(loadTimeRemaining, 1000);
 }
 
 async function buyPackage(pkgId, price) {
