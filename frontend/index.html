@@ -117,19 +117,6 @@ async function loadPackages() {
   `).join('');
 }
 
-async function loadUptime() {
-  try {
-    const r = await fetch(API + '/uptime');
-    const d = await r.json();
-    serverStartTime = d.serverTime || new Date().toISOString();
-    document.getElementById('macDisplay').textContent = d.macAddress || '—';
-  } catch (e) {
-    document.getElementById('macDisplay').textContent = '—';
-  }
-  updateUptimeClock();
-  setInterval(updateUptimeClock, 1000);
-}
-
 async function loadTimeRemaining() {
   const phone = localStorage.getItem('regPhone') || '';
   if (!phone) {
