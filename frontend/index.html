@@ -33,6 +33,7 @@
 <div class="container">
   <header>
     <h1>Swift WiFi</h1>
+    <button class="btn btn-secondary" onclick="showTab('support')">Support</button>
   </header>
 
   <div class="toast" id="toast"></div>
@@ -62,6 +63,23 @@
       </div>
     </div>
   </div>
+
+  <!-- Support -->
+  <div id="tab-support" class="tab-content auth" style="display:none;">
+    <div class="card">
+      <h2>Support</h2>
+      <p style="color:#94a3b8; margin-bottom:1rem;">Have an issue? Send us a message and we’ll get back to you.</p>
+      <div class="form-group">
+        <label>Your Phone</label>
+        <input type="tel" id="supportPhone" placeholder="0712345678" value="">
+      </div>
+      <div class="form-group">
+        <label>Message</label>
+        <textarea id="supportMessage" rows="5" placeholder="Describe your issue..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="sendSupport()">Send Message</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -79,6 +97,11 @@ window.onload = () => {
   loadPackages();
   loadTimeRemaining();
 };
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.getElementById('tab-' + name).style.display = 'block';
+}
 
 async function loadPackages() {
   const pr = await fetch(API + '/packages');
@@ -123,6 +146,27 @@ async function loadTimeRemaining() {
     document.getElementById('macDisplay').textContent = '—';
   }
   setInterval(loadTimeRemaining, 1000);
+}
+
+async function sendSupport() {
+  const phone = document.getElementById('supportPhone').value;
+  const message = document.getElementById('supportMessage').value;
+  if (!phone || !message) {
+    toast('Please fill in both fields', 'error');
+    return;
+  }
+  try {
+    const r = await fetch(API + '/support', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ phone, message })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      toast('Message sent successfully');
+      document.getElementById('supportPhone').value = '';
+      document.getElementById('supportMessage').value = '';
+    } else toast(d.error || 'Failed to send', 'error');
+  } catch (e) { toast('Network error', 'error'); }
 }
 
 async function buyPackage(pkgId, price) {

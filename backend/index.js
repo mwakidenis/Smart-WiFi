@@ -254,6 +254,32 @@ app.get('/api/time-remaining', (req, res) => {
   });
 });
 
+// Support messages storage
+const supportMessages = [];
+
+// Submit support message
+app.post('/api/support', (req, res) => {
+  const { phone, message } = req.body;
+  if (!phone || !message) {
+    return res.status(400).json({ error: 'phone and message required' });
+  }
+  const supportMsg = {
+    id: uuidv4(),
+    phone: normalizePhone(phone),
+    message,
+    status: 'open',
+    createdAt: new Date()
+  };
+  supportMessages.push(supportMsg);
+  console.log('[support] New message from', supportMsg.phone, ':', message);
+  res.json({ message: 'Support message sent successfully', id: supportMsg.id });
+});
+
+// Get support messages (admin)
+app.get('/api/support', (req, res) => {
+  res.json({ supportMessages: supportMessages.slice().reverse() });
+});
+
 // Get transactions
 app.get('/api/transactions', (req, res) => {
   res.json({ transactions: transactions.slice().reverse() });
