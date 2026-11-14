@@ -21,22 +21,11 @@ npm run frontend
 
 Open **http://localhost:3000**.
 
-## Default Login Credentials
-
-| Field | Value |
-|-------|-------|
-| Email | `user@swiftwifi.local` |
-| Phone | `0700000000` |
-| Password | `user` |
-
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/health` | Health check |
-| POST | `/api/auth/register` | Register a new user |
-| POST | `/api/auth/login` | Login (returns token) |
-| GET | `/api/auth/me` | Get current user profile |
 | GET | `/api/packages` | List Wi-Fi packages (time-based, speed-based) |
 | POST | `/api/mpesa/stk-push` | Initiate real Daraja STK Push |
 | POST | `/api/mpesa/callback` | Safaricom callback (idempotent, always 200) |
