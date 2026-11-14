@@ -107,14 +107,18 @@ async function loadPackages() {
   const pr = await fetch(API + '/packages');
   const pd = await pr.json();
   const grid = document.getElementById('packagesGrid');
-  grid.innerHTML = pd.packages.map(p => `
-    <div class="pkg-card">
-      <h3>${p.name}</h3>
+  grid.innerHTML = pd.packages.map((p, i) => {
+  const tierColors = ['#10b981', '#22d3ee', '#f59e0b', '#eab308']; // green, cyan, orange, yellow
+  const tierColor = tierColors[i] || '#22d3ee';
+  return `
+    <div class="pkg-card" style="border-top: 4px solid ${tierColor};">
+      <h3 style="color:${tierColor};">${p.name}</h3>
       <span class="price">KES ${p.price}</span>
       <div class="meta">${p.speedMbps} Mbps • ${p.durationMin} min</div>
       <button class="btn btn-primary" onclick="buyPackage('${p.id}', ${p.price})">Buy</button>
     </div>
-  `).join('');
+  `;
+}).join('');
 }
 
 async function loadTimeRemaining() {
