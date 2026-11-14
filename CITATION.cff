@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use Swift WiFi, please cite it as below."
+authors:
+  - family-names: "Mwakidenis"
+    given-names: "Denis"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+title: "Swift WiFi"
+version: 1.0.0
+date-released: 2026-11-14
+doi: ""
+url: "https://github.com/mwakidenis/Swift-WIFI"
+abstract: "M-Pesa Wi-Fi Hotspot Billing and ISP Management system for Kenyan hotspot operators and ISPs."
+keywords:
+  - M-Pesa
+  - Wi-Fi
+  - billing
+  - ISP
+  - Daraja
+  - STK Push
+license: MIT
+repository-code: "https://github.com/mwakidenis/Swift-WIFI"
