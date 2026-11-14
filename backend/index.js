@@ -18,10 +18,12 @@ const serverStartTime = Date.now();
 
 // Seed default packages — time-based with different speeds
 packages.push(
-  { id: uuidv4(), name: 'Hourly Surf', speedMbps: 5, durationMin: 60, price: 50, currency: 'KES' },
-  { id: uuidv4(), name: 'Day Pass', speedMbps: 10, durationMin: 1440, price: 100, currency: 'KES' },
-  { id: uuidv4(), name: 'Weekend Bundle', speedMbps: 15, durationMin: 4320, price: 250, currency: 'KES' },
-  { id: uuidv4(), name: 'Monthly Unlimited', speedMbps: 25, durationMin: 43200, price: 999, currency: 'KES' }
+  { id: uuidv4(), name: '1 Hour', speedMbps: 5, durationMin: 60, price: 10, currency: 'KES', description: '1 hour unlimited for 1 device' },
+  { id: uuidv4(), name: '12 Hours 1 Device', speedMbps: 10, durationMin: 720, price: 15, currency: 'KES', description: '12 hours unlimited for 1 device' },
+  { id: uuidv4(), name: '12 Hours 2 Devices', speedMbps: 10, durationMin: 720, price: 25, currency: 'KES', description: '12 hours unlimited for 2 devices' },
+  { id: uuidv4(), name: '24 Hours 1 Device', speedMbps: 15, durationMin: 1440, price: 30, currency: 'KES', description: '24 hours unlimited for 1 device' },
+  { id: uuidv4(), name: '2 Weeks 1 Device', speedMbps: 15, durationMin: 20160, price: 450, currency: 'KES', description: '2 weeks unlimited for 1 device' },
+  { id: uuidv4(), name: '1 Month 1 Device', speedMbps: 25, durationMin: 43200, price: 750, currency: 'KES', description: '1 month unlimited for 1 device' }
 );
 
 // Seed default user (regular customer)
@@ -123,7 +125,7 @@ app.post('/api/mpesa/stk-push', async (req, res) => {
       return res.status(400).json({ error: 'amount must be a positive whole number' });
     }
 
-    const pkg = packages.find(p => p.id === packageId);
+    const pkg = packages.find(p => p.name === packageId || p.id === packageId);
     const phoneNorm = normalizePhone(phone);
 
     // Idempotency key for this checkout attempt

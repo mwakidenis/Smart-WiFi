@@ -16,11 +16,13 @@
   .btn-secondary { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
   .card { background: #0f172a; border: 1px solid #334155; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
-  .pkg-card { background: #1e293b; border-radius: 0.8rem; padding: 1.2rem; text-align: center; border: 1px solid #334155; }
+  .pkg-card { background: #1e293b; border-radius: 0.8rem; padding: 1.2rem; text-align: center; border: 1px solid #334155; cursor: pointer; transition: all 0.2s; }
+  .pkg-card:hover { border-color: #22d3ee; transform: translateY(-2px); }
   .pkg-card h3 { margin-bottom: 0.5rem; color: #22d3ee; }
   .pkg-card h4 { margin-bottom: 0.5rem; color: #22d3ee; }
   .pkg-card .price { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: block; }
   .pkg-card .meta { font-size: 0.875rem; color: #94a3b8; margin-bottom: 1rem; }
+  .pkg-card .desc { font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem; }
   .form-group { margin-bottom: 1rem; }
   .form-group label { display: block; margin-bottom: 0.4rem; color: #94a3b8; font-size: 0.875rem; }
   .form-group input { width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid #334155; background: #0a0a0c; color: #e2e8f0; }
@@ -29,6 +31,9 @@
   .toast.error { background: #ef4444; }
   .spinner { width: 16px; height: 16px; border: 3px solid #10b981; border-top: 3px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 8px auto 0; display: none; }
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 100; display: none; justify-content: center; align-items: center; }
+  .modal { background: #0f172a; border: 1px solid #334155; border-radius: 1rem; padding: 2rem; max-width: 400px; width: 90%; text-align: center; }
+  .modal h3 { color: #ffffff; margin-bottom: 1rem; }
 </style>
 </head>
 <body>
@@ -83,10 +88,26 @@
       <button class="btn btn-primary" onclick="sendSupport()">Send Message</button>
     </div>
   </div>
+
+  <!-- Phone Input Modal -->
+  <div id="phoneModal" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modalPackageName">Select Package</h3>
+      <p id="modalPackagePrice" style="color:#94a3b8; margin-bottom:1.5rem;"></p>
+      <div class="form-group">
+        <label>Enter Phone Number</label>
+        <input type="tel" id="modalPhone" placeholder="0712345678" maxlength="10">
+      </div>
+      <button class="btn btn-primary" onclick="confirmBuy()">Pay with M-Pesa</button>
+      <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:1rem;">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const API = 'http://localhost:4000/api';
+let selectedPackage = null;
+let selectedPrice = null;
 
 function toast(msg, type = '') {
   const el = document.getElementById('toast');
@@ -106,19 +127,34 @@ function showTab(name) {
   document.getElementById('tab-' + name).style.display = 'block';
 }
 
+function closeModal() {
+  document.getElementById('phoneModal').style.display = 'none';
+  selectedPackage = null;
+  selectedPrice = null;
+}
+
+function openModal(pkgName, price) {
+  selectedPackage = pkgName;
+  selectedPrice = price;
+  document.getElementById('modalPackageName').textContent = pkgName;
+  document.getElementById('modalPackagePrice').textContent = 'KES ' + price;
+  document.getElementById('modalPhone').value = '';
+  document.getElementById('phoneModal').style.display = 'flex';
+}
+
 async function loadPackages() {
   const pr = await fetch(API + '/packages');
   const pd = await pr.json();
   const grid = document.getElementById('packagesGrid');
   grid.innerHTML = pd.packages.map((p, i) => {
-    const tierColors = ['#10b981', '#22d3ee', '#f59e0b', '#eab308']; // green, cyan, orange, yellow
+    const tierColors = ['#10b981', '#22d3ee', '#f59e0b', '#eab308', '#3b82f6', '#8b5cf6'];
     const tierColor = tierColors[i] || '#22d3ee';
     return `
-      <div class="pkg-card" style="border-top: 4px solid ${tierColor};">
+      <div class="pkg-card" style="border-top: 4px solid ${tierColor};" onclick="openModal('${p.name}', ${p.price})">
         <h3 style="color:${tierColor};">${p.name}</h3>
         <span class="price">KES ${p.price}</span>
         <div class="meta">${p.speedMbps} Mbps • ${p.durationMin} min</div>
-        <button class="btn btn-primary" onclick="buyPackage('${p.id}', ${p.price})">Buy</button>
+        <div class="desc">${p.description}</div>
       </div>
     `;
   }).join('');
@@ -129,7 +165,6 @@ async function loadTimeRemaining() {
   const spinEl = document.getElementById('connectionSpinner');
   const connEl = document.getElementById('connectionDisplay');
 
-  // Show spinner while loading
   spinEl.style.display = 'block';
   connEl.textContent = 'Checking...';
 
@@ -178,18 +213,24 @@ async function sendSupport() {
   } catch (e) { toast('Network error', 'error'); }
 }
 
-async function buyPackage(pkgId, price) {
-  const phone = prompt('Enter your phone number (e.g. 0712345678):');
-  if (!phone) return;
-  localStorage.setItem('regPhone', phone);
+async function confirmBuy() {
+  const phone = document.getElementById('modalPhone').value;
+  if (!phone) {
+    toast('Please enter your phone number', 'error');
+    return;
+  }
+  closeModal();
+
   try {
     const r = await fetch(API + '/mpesa/stk-push', {
       method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ phone, amount: price, packageId })
+      body: JSON.stringify({ phone, amount: selectedPrice, packageId: selectedPackage })
     });
     const d = await r.json();
     if (r.ok) {
       toast('STK Push sent to your phone.');
+      localStorage.setItem('regPhone', phone);
+      loadTimeRemaining();
     } else toast(d.error || 'Purchase failed', 'error');
   } catch (e) { toast('Network error', 'error'); }
 }
