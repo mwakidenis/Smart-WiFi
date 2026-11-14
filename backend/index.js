@@ -48,7 +48,7 @@ app.get('/api/uptime', (req, res) => {
   const uptimeMinutes = Math.floor(uptimeSeconds / 60);
   const uptimeHours = Math.floor(uptimeMinutes / 60);
 
-  // Get MAC address from network interfaces
+  // Get MAC address from network interfaces (real hardware address)
   const interfaces = os.networkInterfaces();
   let macAddress = '—';
   for (const iface of Object.values(interfaces)) {
@@ -67,9 +67,10 @@ app.get('/api/uptime', (req, res) => {
     uptime: `${uptimeHours}h ${uptimeMinutes % 60}m ${uptimeSeconds % 60}s`,
     uptimeSeconds,
     status: 'online',
-    connection: 'connected',
     macAddress,
-    serverTime: new Date().toISOString()
+    serverTime: new Date().toISOString(),
+    platform: process.platform,
+    nodeVersion: process.version
   });
 });
 

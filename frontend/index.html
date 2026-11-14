@@ -18,6 +18,7 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
   .pkg-card { background: #1e293b; border-radius: 0.8rem; padding: 1.2rem; text-align: center; border: 1px solid #334155; }
   .pkg-card h3 { margin-bottom: 0.5rem; color: #22d3ee; }
+  .pkg-card h4 { margin-bottom: 0.5rem; color: #22d3ee; }
   .pkg-card .price { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: block; }
   .pkg-card .meta { font-size: 0.875rem; color: #94a3b8; margin-bottom: 1rem; }
   .form-group { margin-bottom: 1rem; }
@@ -47,7 +48,7 @@
         </div>
         <div class="pkg-card">
           <h4 style="color:#10b981; margin-bottom:0.5rem;">Connection</h4>
-          <div class="price" style="color:#10b981;">● Connected</div>
+          <div id="connectionDisplay">Checking...</div>
         </div>
         <div class="pkg-card">
           <h4 style="color:#8b5cf6; margin-bottom:0.5rem;">Device MAC</h4>
