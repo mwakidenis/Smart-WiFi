@@ -98,12 +98,28 @@ async function loadUptime() {
   try {
     const r = await fetch(API + '/uptime');
     const d = await r.json();
-    document.getElementById('uptimeDisplay').textContent = d.uptime || '—';
+    serverStartTime = d.serverTime || new Date().toISOString();
     document.getElementById('macDisplay').textContent = d.macAddress || '—';
   } catch (e) {
-    document.getElementById('uptimeDisplay').textContent = '—';
     document.getElementById('macDisplay').textContent = '—';
   }
+  updateUptimeClock();
+  setInterval(updateUptimeClock, 1000);
+}
+
+let serverStartTime = null;
+
+function updateUptimeClock() {
+  if (!serverStartTime) return;
+  const now = new Date();
+  const start = new Date(serverStartTime);
+  const diffMs = now - start;
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  document.getElementById('uptimeDisplay').textContent =
+    hours + 'h ' + minutes + 'm ' + seconds + 's';
 }
 
 async function buyPackage(pkgId, price) {
