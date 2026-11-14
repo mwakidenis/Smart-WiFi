@@ -27,7 +27,7 @@
   .form-group input:focus { outline: none; border-color: #22d3ee; }
   .toast { position: fixed; top: 1rem; right: 1rem; padding: 0.8rem 1.2rem; background: #10b981; color: #fff; border-radius: 0.6rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; display: none; }
   .toast.error { background: #ef4444; }
-  .spinner { width: 14px; height: 14px; border: 2px solid #10b981; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 6px auto 0; }
+  .spinner { width: 16px; height: 16px; border: 3px solid #10b981; border-top: 3px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 8px auto 0; display: none; }
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
@@ -111,30 +111,34 @@ async function loadPackages() {
   const pd = await pr.json();
   const grid = document.getElementById('packagesGrid');
   grid.innerHTML = pd.packages.map((p, i) => {
-  const tierColors = ['#10b981', '#22d3ee', '#f59e0b', '#eab308']; // green, cyan, orange, yellow
-  const tierColor = tierColors[i] || '#22d3ee';
-  return `
-    <div class="pkg-card" style="border-top: 4px solid ${tierColor};">
-      <h3 style="color:${tierColor};">${p.name}</h3>
-      <span class="price">KES ${p.price}</span>
-      <div class="meta">${p.speedMbps} Mbps • ${p.durationMin} min</div>
-      <button class="btn btn-primary" onclick="buyPackage('${p.id}', ${p.price})">Buy</button>
-    </div>
-  `;
-}).join('');
+    const tierColors = ['#10b981', '#22d3ee', '#f59e0b', '#eab308']; // green, cyan, orange, yellow
+    const tierColor = tierColors[i] || '#22d3ee';
+    return `
+      <div class="pkg-card" style="border-top: 4px solid ${tierColor};">
+        <h3 style="color:${tierColor};">${p.name}</h3>
+        <span class="price">KES ${p.price}</span>
+        <div class="meta">${p.speedMbps} Mbps • ${p.durationMin} min</div>
+        <button class="btn btn-primary" onclick="buyPackage('${p.id}', ${p.price})">Buy</button>
+      </div>
+    `;
+  }).join('');
 }
 
 async function loadTimeRemaining() {
   const phone = localStorage.getItem('regPhone') || '';
   const spinEl = document.getElementById('connectionSpinner');
   const connEl = document.getElementById('connectionDisplay');
+
+  // Show spinner while loading
   spinEl.style.display = 'block';
   connEl.textContent = 'Checking...';
+
   if (!phone) {
     document.getElementById('timeRemainingDisplay').textContent = '—';
     spinEl.style.display = 'none';
     return;
   }
+
   try {
     const r = await fetch(API + '/time-remaining?phone=' + encodeURIComponent(phone));
     const d = await r.json();
@@ -144,10 +148,12 @@ async function loadTimeRemaining() {
     document.getElementById('timeRemainingDisplay').textContent = '—';
     document.getElementById('macDisplay').textContent = '—';
   }
+
   spinEl.style.display = 'none';
   const isOnline = navigator.onLine;
   connEl.textContent = isOnline ? '● Online' : '● Offline';
   connEl.style.color = isOnline ? '#10b981' : '#ef4444';
+
   setInterval(loadTimeRemaining, 1000);
 }
 
