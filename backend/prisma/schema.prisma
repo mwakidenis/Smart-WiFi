@@ -1,0 +1,186 @@
+// Prisma Schema — Smart Wifi Hotspot Billing & M-Pesa Integration
+// Author: mwakidenis
+// Follows the Comprehensive System Prompt & Engineering Specification
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum TransactionType {
+  PAYMENT
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum LoanStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  REPAID
+  DEFAULTED
+  REJECTED
+}
+
+enum MikroTikSessionStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+model User {
+  id        String    @id() @default(uuid()) @db.Uuid
+  email     String    @unique
+  phone     String    @unique
+  password  String
+  name      String
+  role      UserRole  @default(CUSTOMER)
+  balance   Decimal   @default(0.00) @db.Decimal(10, 2)
+  creditLimit Decimal   @default(0.00) @db.Decimal(10, 2)
+  creditUsed  Decimal   @default(0.00) @db.Decimal(10, 2)
+  isActive    Boolean   @default(true)
+  macAddress  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  sessions     Session[]
+  transactions Transaction[]
+  loans        Loan[]
+  auditLogs    AuditLog[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+model Package {
+  id          String   @id() @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  dataMb      Int
+  durationMin Int
+  speedMbps   Int
+  price       Decimal  @db.Decimal(10, 2)
+  currency    String   @default("KES")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  transactions Transaction[]
+
+  @@index([isActive])
+}
+
+model Transaction {
+  id              String   @id() @default(uuid()) @db.Uuid
+  userId          String   @db.Uuid
+  packageId       String?  @db.Uuid
+  type            TransactionType
+  amount          Decimal  @db.Decimal(10, 2)
+  currency        String   @default("KES")
+  status          TransactionStatus @default(PENDING)
+  mpesaReceipt    String?  @unique
+  checkoutRequestId String? @unique
+  phone           String?
+  description     String?
+  provisioned     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id])
+  package  Package? @relation(fields: [packageId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([checkoutRequestId])
+  @@index([mpesaReceipt])
+  @@index([createdAt])
+}
+
+model Loan {
+  id           String   @id() @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  amount       Decimal  @db.Decimal(10, 2)
+  currency     String   @default("KES")
+  status       LoanStatus @default(PENDING)
+  interestRate Decimal  @default(0.00) @db.Decimal(5, 2)
+  dueAt        DateTime?
+  repaidAt     DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Session {
+  id        String   @id() @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  routerId  String?
+  ipAddress String?
+  macAddress String?
+  startTime DateTime @default(now())
+  endTime   DateTime?
+  dataUsedMb Int     @default(0)
+  durationMin Int    @default(0)
+  status    MikroTikSessionStatus @default(ACTIVE)
+  packageId String?  @db.Uuid
+
+  user    User @relation(fields: [userId], references: [id])
+  package Package? @relation(fields: [packageId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([ipAddress])
+  @@index([macAddress])
+  @@index([startTime])
+}
+
+model AuditLog {
+  id        String   @id() @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid
+  action    String
+  entity    String?
+  entityId  String?
+  ipAddress String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model RateLimitRecord {
+  id        String   @id() @default(uuid()) @db.Uuid
+  ipAddress String
+  route     String
+  count     Int      @default(0)
+  windowStart DateTime @default(now())
+  blocked   Boolean  @default(false)
+  blockedUntil DateTime?
+
+  @@index([ipAddress])
+  @@index([route])
+  @@index([blocked])
+}

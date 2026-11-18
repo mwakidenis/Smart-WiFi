@@ -52,6 +52,10 @@
   body.light-mode .modal h3 { color: #0f172a; }
   body.light-mode .btn-secondary { background: #f1f5f9; color: #0f172a; border-color: #e2e8f0; }
   body.light-mode .btn-primary { background: #22d3ee; color: #0a0a0c; }
+  .loading { opacity: 0.6; pointer-events: none; position: relative; }
+  .loading::after { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.4); border-radius: 1rem; }
+  .ajax-error { color: #ef4444; font-size: 0.875rem; margin-top: 0.5rem; display: none; }
+  .ajax-success { color: #10b981; font-size: 0.875rem; margin-top: 0.5rem; display: none; }
 </style>
 </head>
 <body>
@@ -88,7 +92,12 @@
 
       <div class="card" style="margin-top:1rem;">
         <h3 style="margin-bottom:1rem; color:#fff;">Choose a Package</h3>
-        <div class="grid" id="packagesGrid"></div>
+        <div class="grid" id="packagesGrid">
+          <div class="loading" style="grid-column: 1 / -1; text-align:center; padding: 2rem;">
+            <div class="spinner" style="display:block;"></div>
+            <div style="margin-top:1rem; color:#94a3b8;">Loading packages...</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -97,7 +106,7 @@
   <div id="tab-support" class="tab-content auth" style="display:none;">
     <div class="card">
       <h2>Support</h2>
-      <p style="color:#94a3b8; margin-bottom:1rem;">Have an issue? Send us a message and we’ll get back to you.</p>
+      <p style="color:#94a3b8; margin-bottom:1rem;">Have an issue? Send us a message and we'll get back to you.</p>
       <div class="form-group">
         <label>Your Phone</label>
         <input type="tel" id="supportPhone" placeholder="0712345678" value="">
@@ -111,6 +120,7 @@
         <textarea id="supportMessage" rows="5" placeholder="Describe your issue..."></textarea>
       </div>
       <button class="btn btn-primary" onclick="sendSupport()">Send Message</button>
+      <div id="supportAjaxStatus" class="ajax-error"></div>
     </div>
   </div>
 
@@ -129,11 +139,119 @@
   </div>
 </div>
 
+  <!-- Footer -->
+  <footer style="text-align:center; padding: 2rem; color: #94a3b8; font-size: 0.875rem; border-top: 1px solid #334155; margin-top: 2rem;">
+    <div>Smart Wifi &copy; 2026 mwakidenis. All rights reserved.</div>
+    <div style="margin-top: 0.5rem;">M-Pesa Wi-Fi Hotspot Billing &amp; ISP Management</div>
+  </footer>
+</div>
+
 <script>
 const API = 'http://localhost:4000/api';
+
+/* ============================================================
+   AJAX CONTENT MANAGER
+   Async/await, caching, retries, AbortController timeout handling
+   ============================================================ */
+class ContentManager {
+  constructor(baseUrl, options = {}) {
+    this.baseUrl = baseUrl;
+    this.cache = new Map();
+    this.cacheTTL = options.cacheTTL ?? 30000;
+    this.retryAttempts = options.retryAttempts ?? 3;
+    this.retryDelay = options.retryDelay ?? 1000;
+    this.eventListeners = new Map();
+  }
+
+  async request(endpoint, options = {}) {
+    const cacheKey = `${options.method || 'GET'}:${endpoint}`;
+    const now = Date.now();
+
+    if ((!options.method || options.method === 'GET') && this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey);
+      if (now - cached.timestamp < this.cacheTTL) {
+        this.dispatch('contentLoaded', { endpoint, data: cached.data });
+        return cached.data;
+      }
+    }
+
+    let lastError;
+    for (let attempt = 1; attempt <= this.retryAttempts; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      try {
+        const res = await fetch(`${this.baseUrl}${endpoint}`, {
+          ...options,
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+        });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        if (!options.method || options.method === 'GET') {
+          this.cache.set(cacheKey, { data, timestamp: now });
+        }
+        this.dispatch('contentLoaded', { endpoint, data });
+        return data;
+      } catch (err) {
+        lastError = err;
+        if (attempt < this.retryAttempts && err.name !== 'AbortError') {
+          await new Promise(r => setTimeout(r, this.retryDelay * attempt));
+        }
+      }
+    }
+
+    this.dispatch('contentError', { endpoint, error: lastError.message });
+    throw lastError;
+  }
+
+  async get(endpoint) {
+    return this.request(endpoint, { method: 'GET' });
+  }
+
+  async post(endpoint, body) {
+    this.cache.delete(endpoint);
+    return this.request(endpoint, { method: 'POST', body: JSON.stringify(body) });
+  }
+
+  on(event, listener) {
+    if (!this.eventListeners.has(event)) this.eventListeners.set(event, []);
+    this.eventListeners.get(event).push(listener);
+  }
+
+  off(event, listener) {
+    if (this.eventListeners.has(event)) {
+      this.eventListeners.set(event, this.eventListeners.get(event).filter(l => l !== listener));
+    }
+  }
+
+  dispatch(event, data) {
+    if (this.eventListeners.has(event)) {
+      this.eventListeners.get(event).forEach(l => l(data));
+    }
+  }
+
+  clearCache() {
+    this.cache.clear();
+  }
+}
+
+const cms = new ContentManager(API, { cacheTTL: 30000, retryAttempts: 3, retryDelay: 1000 });
+
+/* ============================================================
+   UI STATE
+   ============================================================ */
 let selectedPackage = null;
 let selectedPrice = null;
 
+/* ============================================================
+   UTILITIES
+   ============================================================ */
 function toast(msg, type = '') {
   const el = document.getElementById('toast');
   el.textContent = msg;
@@ -142,12 +260,18 @@ function toast(msg, type = '') {
   setTimeout(() => el.style.display = 'none', 3000);
 }
 
-window.onload = () => {
-  loadPackages();
-  loadTimeRemaining();
-  initTheme();
-};
+function showAjaxStatus(containerId, type, msg) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.textContent = msg;
+  el.className = type === 'success' ? 'ajax-success' : 'ajax-error';
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
 
+/* ============================================================
+   THEME
+   ============================================================ */
 function initTheme() {
   const savedTheme = localStorage.getItem('theme');
   const toggleBtn = document.getElementById('themeToggle');
@@ -167,6 +291,9 @@ function toggleTheme() {
   toggleBtn.textContent = isLight ? '☀️' : '🌙';
 }
 
+/* ============================================================
+   TABS
+   ============================================================ */
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
   document.getElementById('tab-' + name).style.display = 'block';
@@ -187,24 +314,73 @@ function openModal(pkgName, price) {
   document.getElementById('phoneModal').style.display = 'flex';
 }
 
+/* ============================================================
+   PACKAGES (AJAX)
+   ============================================================ */
 async function loadPackages() {
-  const pr = await fetch(API + '/packages');
-  const pd = await pr.json();
   const grid = document.getElementById('packagesGrid');
-  grid.innerHTML = pd.packages.map((p, i) => {
+  grid.innerHTML = `
+    <div class="loading" style="grid-column: 1 / -1; text-align:center; padding: 2rem;">
+      <div class="spinner" style="display:block;"></div>
+      <div style="margin-top:1rem; color:#94a3b8;">Loading packages...</div>
+    </div>
+  `;
+
+  try {
+    const pd = await cms.get('/packages');
+    renderPackages(pd.packages || PACKAGES);
+  } catch (e) {
+    grid.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align:center; padding: 2rem; color:#ef4444;">
+        Failed to load packages. ${e.message}
+        <button class="btn btn-primary" onclick="loadPackages()" style="margin-top:1rem;">Retry</button>
+      </div>
+    `;
+  }
+}
+
+function renderPackages(packages) {
+  const grid = document.getElementById('packagesGrid');
+  grid.innerHTML = packages.map((p, i) => {
     const tierColors = ['#10b981', '#22d3ee', '#f59e0b', '#eab308', '#3b82f6', '#8b5cf6'];
     const tierColor = tierColors[i] || '#22d3ee';
     return `
-      <div class="pkg-card" style="border-top: 4px solid ${tierColor};" onclick="openModal('${p.name}', ${p.price})">
-        <h3 style="color:${tierColor};">${p.name}</h3>
-        <span class="price">KES ${p.price}</span>
-        <div class="meta">${p.speedMbps} Mbps • ${p.durationMin} min</div>
-        <div class="desc">${p.description}</div>
+      <div class="pkg-card" style="border-top: 4px solid ${tierColor};" onclick="openModal('${escapeHtml(p.name)}', ${p.price})">
+        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-cyan-400 mb-4 group-hover:bg-white/10 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M5 12a2 2 0 01-2-2v-6a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2m-2-2h6"/></svg>
+        </div>
+        <h3 className="text-lg font-bold text-white">${escapeHtml(p.name)}</h3>
+        <span class="text-2xl font-bold text-white">${pkg.currency} ${pkg.price}</span>
+        <div className="grid grid-cols-2 gap-3 mb-4 text-sm text-slate-300">
+          <div className="flex items-center gap-1"><span className="text-white">📶</span> ${pkg.dataMb} MB</div>
+          <div className="flex items-center gap-1"><span className="text-white">⏱</span> ${pkg.durationMin} min</div>
+          <div className="flex items-center gap-1"><span className="text-white">⚡</span> ${pkg.speedMbps} Mbps</div>
+        </div>
+        <p className="text-xs text-slate-500 mb-4">${escapeHtml(p.description || '')}</p>
+        <button onclick="openModal('${escapeHtml(p.name)}', ${p.price})" className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-neon-cyan hover:from-cyan-400 hover:to-blue-500 transition-all">Buy</button>
       </div>
     `;
   }).join('');
 }
 
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+const PACKAGES = [
+  { id: 'pkg_1', name: '1 Hour', dataMb: 500, durationMin: 60, price: 10, currency: 'KES', description: '1 hour unlimited for 1 device', speedMbps: 5 },
+  { id: 'pkg_2', name: '12 Hours 1 Device', dataMb: 0, durationMin: 720, price: 15, currency: 'KES', description: '12 hours unlimited for 1 device', speedMbps: 10 },
+  { id: 'pkg_3', name: '12 Hours 2 Devices', dataMb: 0, durationMin: 720, price: 25, currency: 'KES', description: '12 hours unlimited for 2 devices', speedMbps: 10 },
+  { id: 'pkg_4', name: '24 Hours 1 Device', dataMb: 0, durationMin: 1440, price: 30, currency: 'KES', description: '24 hours unlimited for 1 device', speedMbps: 15 },
+  { id: 'pkg_5', name: '2 Weeks 1 Device', dataMb: 0, durationMin: 20160, price: 450, currency: 'KES', description: '2 weeks unlimited for 1 device', speedMbps: 15 },
+  { id: 'pkg_6', name: '1 Month 1 Device', dataMb: 0, durationMin: 43200, price: 750, currency: 'KES', description: '1 month unlimited for 1 device', speedMbps: 25 },
+];
+
+/* ============================================================
+   TIME REMAINING (AJAX with polling)
+   ============================================================ */
 async function loadTimeRemaining() {
   const phone = localStorage.getItem('regPhone') || '';
   const spinEl = document.getElementById('connectionSpinner');
@@ -220,8 +396,7 @@ async function loadTimeRemaining() {
   }
 
   try {
-    const r = await fetch(API + '/time-remaining?phone=' + encodeURIComponent(phone));
-    const d = await r.json();
+    const d = await cms.get('/time-remaining?phone=' + encodeURIComponent(phone));
     document.getElementById('timeRemainingDisplay').textContent = d.remaining || '—';
     document.getElementById('macDisplay').textContent = d.macAddress || '—';
   } catch (e) {
@@ -237,6 +412,9 @@ async function loadTimeRemaining() {
   setInterval(loadTimeRemaining, 1000);
 }
 
+/* ============================================================
+   SUPPORT (AJAX POST)
+   ============================================================ */
 async function sendSupport() {
   const phone = document.getElementById('supportPhone').value;
   const transactionCode = document.getElementById('supportTransactionCode').value;
@@ -245,20 +423,28 @@ async function sendSupport() {
     toast('Please fill in both fields', 'error');
     return;
   }
+
   try {
-    const r = await fetch(API + '/support', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ phone, transactionCode, message })
-    });
-    const d = await r.json();
-    if (r.ok) {
+    const d = await cms.post('/support', { phone, transactionCode, message });
+    if (d.message) {
       toast('Message sent successfully');
       document.getElementById('supportPhone').value = '';
+      document.getElementById('supportTransactionCode').value = '';
       document.getElementById('supportMessage').value = '';
-    } else toast(d.error || 'Failed to send', 'error');
-  } catch (e) { toast('Network error', 'error'); }
+      showAjaxStatus('supportAjaxStatus', 'success', 'Message sent successfully');
+    } else {
+      toast(d.error || 'Failed to send', 'error');
+      showAjaxStatus('supportAjaxStatus', 'error', d.error || 'Failed to send');
+    }
+  } catch (e) {
+    toast('Network error', 'error');
+    showAjaxStatus('supportAjaxStatus', 'error', 'Network error: ' + e.message);
+  }
 }
 
+/* ============================================================
+   STK PURCHASE (AJAX POST)
+   ============================================================ */
 async function confirmBuy() {
   const phone = document.getElementById('modalPhone').value;
   if (!phone) {
@@ -268,26 +454,31 @@ async function confirmBuy() {
   closeModal();
 
   try {
-    const r = await fetch(API + '/mpesa/stk-push', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ phone, amount: selectedPrice, packageId: selectedPackage })
+    const d = await cms.post('/mpesa/stk-push', {
+      phone,
+      amount: selectedPrice,
+      packageId: selectedPackage,
     });
-    const d = await r.json();
-    if (r.ok) {
+    if (d.ok || d.message) {
       toast('STK Push sent to your phone.');
       localStorage.setItem('regPhone', phone);
       loadTimeRemaining();
-    } else toast(d.error || 'Purchase failed', 'error');
-  } catch (e) { toast('Network error', 'error'); }
+    } else {
+      toast(d.error || 'Purchase failed', 'error');
+    }
+  } catch (e) {
+    toast('Network error', 'error');
+  }
 }
+
+/* ============================================================
+   INIT
+   ============================================================ */
+window.onload = () => {
+  loadPackages();
+  loadTimeRemaining();
+  initTheme();
+};
 </script>
-
-  <!-- Footer -->
-  <footer style="text-align:center; padding: 2rem; color: #94a3b8; font-size: 0.875rem; border-top: 1px solid #334155; margin-top: 2rem;">
-    <div>Smart Wifi &copy; 2026 mwakidenis. All rights reserved.</div>
-    <div style="margin-top: 0.5rem;">M-Pesa Wi-Fi Hotspot Billing &amp; ISP Management</div>
-  </footer>
-</div>
-
 </body>
 </html>

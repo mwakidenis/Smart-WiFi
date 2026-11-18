@@ -1,22 +1,37 @@
 {
-  "name": "swift-wifi",
+  "name": "smart-wifi",
   "version": "1.0.0",
-  "description": "Simple M-Pesa Wi-Fi Hotspot Billing System",
+  "description": "Smart Wifi Hotspot Billing & M-Pesa Integration System",
   "main": "backend/index.js",
   "scripts": {
     "backend": "node backend/index.js",
     "frontend": "npx serve frontend -p 3000",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "deploy": "npx wrangler pages deploy frontend --functions functions --project-name swift-wifi"
+    "deploy": "npx wrangler pages deploy frontend --functions functions --project-name smart-wifi",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "lint": "eslint backend frontend --ext .js",
+    "test": "node --test backend/tests/*.js"
   },
   "dependencies": {
     "express": "^4.19.2",
     "cors": "^2.8.5",
     "uuid": "^11.0.0",
     "serve": "^14.2.1",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "prisma": "^5.17.0",
+    "@prisma/client": "^5.17.0",
+    "dotenv": "^16.4.5",
+    "axios": "^1.7.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "express-rate-limit": "^7.2.0",
+    "helmet": "^7.1.0",
+    "cookie-parser": "^1.4.6"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
+    "wrangler": "^4.0.0",
+    "eslint": "^8.57.0"
   }
 }
