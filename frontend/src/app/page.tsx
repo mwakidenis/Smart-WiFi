@@ -86,7 +86,7 @@ export default function PackagesPage() {
       )}
 
       <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {packages.map((pkg) => {
+        {packages.map((pkg, i) => {
           const tierColors = ['#10b981', '#22d3ee', '#f59e0b', '#eab308', '#3b82f6', '#8b5cf6'];
           const tierColor = tierColors[i] || '#22d3ee';
           return (
@@ -114,13 +114,14 @@ export default function PackagesPage() {
               </div>
               <p className="text-xs text-slate-500 mb-4">{pkg.description}</p>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   window.open(`/packages/${pkg.id}`, '_self');
                 }}
-                className="w-full py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-neon-cyan hover:from-cyan-400 hover:to-blue-500 transition-all"
+                className="w-full min-h-14 px-6 py-4 rounded-xl border-2 border-cyan-300/70 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white text-lg font-extrabold uppercase tracking-wide shadow-neon-cyan hover:from-cyan-400 hover:to-purple-500 active:scale-[0.98] transition-all"
               >
-                Buy
+                Buy Package
               </button>
             </div>
           );
