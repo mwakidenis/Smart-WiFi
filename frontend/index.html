@@ -133,7 +133,7 @@
         <label>Enter Phone Number</label>
         <input type="tel" id="modalPhone" placeholder="0712345678" maxlength="10">
       </div>
-      <button class="btn btn-primary" onclick="confirmBuy()">Pay with M-Pesa</button>
+      <button class="btn btn-primary w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white font-bold text-lg shadow-neon-cyan hover:from-cyan-400 hover:to-purple-400 hover:shadow-neon-violet transition-all uppercase tracking-wider" onclick="confirmBuy()">Pay with M-Pesa</button>
       <button class="btn btn-secondary" onclick="closeModal()" style="margin-top:1rem;">Cancel</button>
     </div>
   </div>
@@ -357,7 +357,7 @@ function renderPackages(packages) {
           <div class="flex items-center gap-1"><span class="text-white">⚡</span> ${p.speedMbps} Mbps</div>
         </div>
         <p class="text-xs text-slate-500 mb-4">${escapeHtml(p.description || '')}</p>
-        <button onclick="openModal('${escapeHtml(p.name)}', ${p.price})" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-neon-cyan hover:from-cyan-400 hover:to-blue-500 transition-all">Buy</button>
+        <button onclick="openModal('${escapeHtml(p.name)}', ${p.price})" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white font-bold text-lg shadow-neon-cyan hover:from-cyan-400 hover:to-purple-400 hover:shadow-neon-violet transition-all uppercase tracking-wider">Buy Package</button>
       </div>
     `;
   }).join('');
