@@ -23,6 +23,8 @@
   .pkg-card .price { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; display: block; }
   .pkg-card .meta { font-size: 0.875rem; color: #94a3b8; margin-bottom: 1rem; }
   .pkg-card .desc { font-size: 0.75rem; color: #94a3b8; margin-bottom: 1rem; }
+  .buy-button { display: block; width: 100%; min-height: 3.25rem; padding: 0.9rem 1.25rem; border: 2px solid #67e8f9; border-radius: 0.75rem; background: linear-gradient(135deg, #06b6d4, #2563eb); color: #ffffff; font-size: 1.05rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; box-shadow: 0 8px 24px rgba(34, 211, 238, 0.35); cursor: pointer; }
+  .buy-button:hover { background: linear-gradient(135deg, #22d3ee, #3b82f6); box-shadow: 0 10px 28px rgba(34, 211, 238, 0.5); }
   .form-group { margin-bottom: 1rem; }
   .form-group label { display: block; margin-bottom: 0.4rem; color: #94a3b8; font-size: 0.875rem; }
   .form-group input { width: 100%; padding: 0.6rem; border-radius: 0.5rem; border: 1px solid #334155; background: #0a0a0c; color: #e2e8f0; }
@@ -357,7 +359,7 @@ function renderPackages(packages) {
           <div class="flex items-center gap-1"><span class="text-white">⚡</span> ${p.speedMbps} Mbps</div>
         </div>
         <p class="text-xs text-slate-500 mb-4">${escapeHtml(p.description || '')}</p>
-        <button onclick="openModal('${escapeHtml(p.name)}', ${p.price})" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white font-bold text-lg shadow-neon-cyan hover:from-cyan-400 hover:to-purple-400 hover:shadow-neon-violet transition-all uppercase tracking-wider">Buy Package</button>
+        <button type="button" onclick="event.stopPropagation(); openModal('${escapeHtml(p.name)}', ${p.price})" class="buy-button">Buy Package</button>
       </div>
     `;
   }).join('');
