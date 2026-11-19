@@ -84,3 +84,5 @@ npx wrangler kv:namespace create "SWIFT_DB"
 npm run deploy
 ```
 
+made with ❤️ by mwakidenis
+
