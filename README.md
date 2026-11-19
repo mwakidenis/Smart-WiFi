@@ -2,6 +2,37 @@
 
 Simple M-Pesa Wi-Fi Hotspot Billing System.
 
+## Languages and Technologies
+
+### Languages and File Formats
+
+- **JavaScript** - Backend services, API routes, browser scripts, and legacy static-page logic
+- **TypeScript** - Typed frontend components, hooks, utilities, and router adapter code
+- **TSX / JSX** - React and Next.js component markup
+- **HTML** - Static captive portal document structure
+- **CSS** - Global styles, responsive layouts, animations, and the static portal theme
+- **Tailwind CSS** - Utility-first styling for the Next.js frontend
+- **Prisma Schema** - Database models and PostgreSQL ORM definitions
+- **SQL** - PostgreSQL data model and queries through Prisma
+- **JSON** - Package metadata, API payloads, configuration, and `package.json` manifests
+- **Markdown** - Documentation, contribution guides, and project metadata
+- **Shell scripting** - Local development and deployment commands
+
+### Frameworks, Libraries, and Protocols
+
+- **Node.js** and **Express.js** - Backend runtime and HTTP API server
+- **React** and **Next.js App Router** - Frontend application and page routing
+- **AJAX** - Asynchronous browser-server communication without full-page reloads
+- **Fetch API** and **Axios** - HTTP requests from frontend and backend code
+- **Zustand** - Client-side state management
+- **Framer Motion** - Frontend transitions and interaction animations
+- **Lucide React** - Interface icons
+- **Prisma ORM** with **PostgreSQL** - Persistence and transactional billing data
+- **M-Pesa Daraja API** - Safaricom STK Push payments and callbacks
+- **Server-Sent Events (SSE)** - Lightweight payment status updates
+- **MikroTik RouterOS API**, **CoovaChilli**, and mock router adapters - Hotspot authorization
+- **Cloudflare Pages/Workers** and **Wrangler** - Deployment tooling
+
 ## Quick Start (Local)
 
 ```bash
