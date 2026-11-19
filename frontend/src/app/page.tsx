@@ -90,7 +90,7 @@ export default function PackagesPage() {
 
       <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
         {packages.map((pkg, i) => {
-          const tierColors = ['#10b981', '#22d3ee', '#f59e0b', '#eab308', '#3b82f6', '#8b5cf6'];
+          const tierColors = ['#00ff66', '#00f0ff', '#ff5500', '#ffe600', '#ccff00', '#22d3ee'];
           const tierColor = tierColors[i] || '#22d3ee';
           return (
             <div

@@ -20,7 +20,7 @@
     @apply rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md;
   }
   .neon-text {
-    background: linear-gradient(to right, #22d3ee, #3b82f6, #8b5cf6);
+    background: linear-gradient(to right, #00f0ff, #3b82f6, #ccff00);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

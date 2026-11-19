@@ -17,11 +17,11 @@ module.exports = {
         neon: {
           cyan: '#22d3ee',
           emerald: '#10b981',
-          violet: '#8b5cf6',
+          signal: '#ff5500',
         },
       },
       backgroundImage: {
-        'neon-gradient': 'linear-gradient(135deg, #22d3ee 0%, #3b82f6 50%, #8b5cf6 100%)',
+        'neon-gradient': 'linear-gradient(135deg, #00f0ff 0%, #3b82f6 50%, #ccff00 100%)',
       },
       borderRadius: {
         xl: '0.75rem',
@@ -30,7 +30,7 @@ module.exports = {
       },
       boxShadow: {
         'neon-cyan': '0 0 20px rgba(34, 211, 238, 0.35)',
-        'neon-violet': '0 0 20px rgba(139, 92, 246, 0.35)',
+        'neon-orange': '0 0 20px rgba(255, 85, 0, 0.35)',
       },
       animation: {
         'pulse-neon': 'pulse-neon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
