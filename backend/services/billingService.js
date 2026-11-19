@@ -239,6 +239,7 @@ class BillingService {
     // Idempotency: find the transaction by CheckoutRequestID
     const tx = await prisma.transaction.findFirst({
       where: { checkoutRequestId },
+      include: { package: true },
     });
 
     if (!tx) {
@@ -255,16 +256,22 @@ class BillingService {
     if (success) {
       // Mark completed + credit user balance
       const updated = await prisma.$transaction(async (txClient) => {
-        const updatedTx = await txClient.transaction.update({
-          where: { id: tx.id },
+        const claimed = await txClient.transaction.updateMany({
+          where: { id: tx.id, status: "PENDING" },
           data: {
             status: "COMPLETED",
             mpesaReceipt: receipt,
             amount,
+            durationMin: tx.package?.durationMin || null,
+            expiresAt: tx.package ? new Date(Date.now() + tx.package.durationMin * 60 * 1000) : null,
             description: `Completed: ${resultDesc}`,
             updatedAt: new Date(),
           },
         });
+
+        if (claimed.count !== 1) return null;
+
+        const updatedTx = await txClient.transaction.findUnique({ where: { id: tx.id } });
 
         await txClient.user.update({
           where: { id: tx.userId },
@@ -283,6 +290,11 @@ class BillingService {
 
         return updatedTx;
       });
+
+      if (!updated) {
+        console.log('[callback] Duplicate callback for', checkoutRequestID);
+        return { success: true, alreadyProcessed: true };
+      }
 
       console.log('[callback] PAID', checkoutRequestID, 'KES', amount, 'receipt:', receipt);
       return { success: true, transaction: updated };

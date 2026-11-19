@@ -1,3 +1,5 @@
+'use client';
+
 /* frontend/src/app/page.tsx */
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -7,22 +9,23 @@ import { cms } from '@/lib/contentManager';
 import { usePackageStore } from '@/store/useStore';
 
 const PACKAGES = [
-  { id: 'pkg_1', name: '1 Hour', dataMb: 500, durationMin: 60, price: 10, currency: 'KES', description: '1 hour unlimited for 1 device', speedMbps: 5 },
-  { id: 'pkg_2', name: '12 Hours 1 Device', dataMb: 0, durationMin: 720, price: 15, currency: 'KES', description: '12 hours unlimited for 1 device', speedMbps: 10 },
-  { id: 'pkg_3', name: '12 Hours 2 Devices', dataMb: 0, durationMin: 720, price: 25, currency: 'KES', description: '12 hours unlimited for 2 devices', speedMbps: 10 },
-  { id: 'pkg_4', name: '24 Hours 1 Device', dataMb: 0, durationMin: 1440, price: 30, currency: 'KES', description: '24 hours unlimited for 1 device', speedMbps: 15 },
-  { id: 'pkg_5', name: '2 Weeks 1 Device', dataMb: 0, durationMin: 20160, price: 450, currency: 'KES', description: '2 weeks unlimited for 1 device', speedMbps: 15 },
-  { id: 'pkg_6', name: '1 Month 1 Device', dataMb: 0, durationMin: 43200, price: 750, currency: 'KES', description: '1 month unlimited for 1 device', speedMbps: 25 },
+  { id: 'pkg_1', name: '1 Hour', dataLimitMB: 500, durationMin: 60, price: 10, currency: 'KES', description: '1 hour capped bundle', speedMbps: 5, isActive: true },
+  { id: 'pkg_2', name: '12 Hours 1 Device', dataLimitMB: null, durationMin: 720, price: 15, currency: 'KES', description: '12 hours unlimited for 1 device', speedMbps: 10, isActive: true },
+  { id: 'pkg_3', name: '12 Hours 2 Devices', dataLimitMB: null, durationMin: 720, price: 25, currency: 'KES', description: '12 hours unlimited for 2 devices', speedMbps: 10, isActive: true },
+  { id: 'pkg_4', name: '24 Hours 1 Device', dataLimitMB: null, durationMin: 1440, price: 30, currency: 'KES', description: '24 hours unlimited for 1 device', speedMbps: 15, isActive: true },
+  { id: 'pkg_5', name: '2 Weeks 1 Device', dataLimitMB: null, durationMin: 20160, price: 450, currency: 'KES', description: '2 weeks unlimited for 1 device', speedMbps: 15, isActive: true },
+  { id: 'pkg_6', name: '1 Month 1 Device', dataLimitMB: null, durationMin: 43200, price: 750, currency: 'KES', description: '1 month unlimited for 1 device', speedMbps: 25, isActive: true },
 ];
 
 export default function PackagesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { packages, setPackages, isLoading: storeLoading, error: storeError } = usePackageStore((s) => ({
+  const { packages, setPackages, fetchPackages, isLoading: storeLoading, error: storeError } = usePackageStore((s) => ({
     packages: s.packages,
     setPackages: s.setPackages,
     isLoading: s.isLoading,
     error: s.error,
+    fetchPackages: s.fetchPackages,
   }));
 
   useEffect(() => {
@@ -70,7 +73,7 @@ export default function PackagesPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => loadPackages()}
+            onClick={() => void fetchPackages()}
             className="px-4 py-2 rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:text-white transition-all"
           >
             <Clock className="w-4 h-4 mr-2" />
@@ -103,7 +106,7 @@ export default function PackagesPage() {
               <span className="text-2xl font-bold text-white mb-2 block">{pkg.currency} {pkg.price}</span>
               <div className="space-y-1 text-sm text-slate-400 mb-4">
                 <div className="flex items-center justify-center gap-1">
-                  <span className="text-white">📶</span> {pkg.dataMb} MB
+                  <span className="text-cyan-300">∞</span> {pkg.dataLimitMB === null ? 'Unlimited Data' : `${pkg.dataLimitMB} MB`}
                 </div>
                 <div className="flex items-center justify-center gap-1">
                   <span className="text-white">⏱</span> {pkg.durationMin} min
@@ -119,7 +122,7 @@ export default function PackagesPage() {
                   e.stopPropagation();
                   window.open(`/packages/${pkg.id}`, '_self');
                 }}
-                className="w-full min-h-14 px-6 py-4 rounded-xl border-2 border-cyan-300/70 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white text-lg font-extrabold uppercase tracking-wide shadow-neon-cyan hover:from-cyan-400 hover:to-purple-500 active:scale-[0.98] transition-all"
+                className="w-full min-h-14 px-6 py-4 rounded-xl border-2 border-cyan-300/70 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-extrabold uppercase tracking-wide shadow-neon-cyan hover:from-cyan-400 hover:to-blue-500 active:scale-[0.98] transition-all"
               >
                 Buy Package
               </button>

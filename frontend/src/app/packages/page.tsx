@@ -5,12 +5,25 @@ import { useState } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Wifi, Smartphone, CreditCard, Clock } from 'lucide-react';
+import { PackageGrid } from '@/components/PackageGrid';
+import { MpesaCheckoutModal } from '@/components/MpesaCheckoutModal';
+
+type Package = {
+	id: string;
+	name: string;
+	dataLimitMB: number | null;
+	durationMin: number;
+	price: number;
+	currency: string;
+	description?: string;
+	speedMbps: number;
+};
 
 const PACKAGES = [
 	{
 		id: 'pkg_1',
 		name: '1 Hour',
-		dataMb: 500,
+		dataLimitMB: 500,
 		durationMin: 60,
 		price: 10,
 		currency: 'KES',
@@ -20,7 +33,7 @@ const PACKAGES = [
 	{
 		id: 'pkg_2',
 		name: '12 Hours 1 Device',
-		dataMb: 0,
+		dataLimitMB: null,
 		durationMin: 720,
 		price: 15,
 		currency: 'KES',
@@ -30,7 +43,7 @@ const PACKAGES = [
 	{
 		id: 'pkg_3',
 		name: '12 Hours 2 Devices',
-		dataMb: 0,
+		dataLimitMB: null,
 		durationMin: 720,
 		price: 25,
 		currency: 'KES',
@@ -40,7 +53,7 @@ const PACKAGES = [
 	{
 		id: 'pkg_4',
 		name: '24 Hours 1 Device',
-		dataMb: 0,
+		dataLimitMB: null,
 		durationMin: 1440,
 		price: 30,
 		currency: 'KES',
@@ -50,7 +63,7 @@ const PACKAGES = [
 	{
 		id: 'pkg_5',
 		name: '2 Weeks 1 Device',
-		dataMb: 0,
+		dataLimitMB: null,
 		durationMin: 20160,
 		price: 450,
 		currency: 'KES',
@@ -60,7 +73,7 @@ const PACKAGES = [
 	{
 		id: 'pkg_6',
 		name: '1 Month 1 Device',
-		dataMb: 0,
+		dataLimitMB: null,
 		durationMin: 43200,
 		price: 750,
 		currency: 'KES',
@@ -70,11 +83,11 @@ const PACKAGES = [
 ];
 
 export default function PackagesPage() {
-	const [selected, setSelected] = useState<typeof PACKAGES[number] | null>(null);
+	const [selected, setSelected] = useState<Package | null>(null);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [stkLoading, setStkLoading] = useState(false);
 
-	async function handleBuy(pkg: typeof PACKAGES[number]) {
+	async function handleBuy(pkg: Package) {
 		setSelected(pkg);
 		setModalOpen(true);
 	}
@@ -119,6 +132,10 @@ export default function PackagesPage() {
 			</div>
 
 			<div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
+				<PackageGrid packages={PACKAGES} onSelect={handleBuy} />
+			</div>
+
+			<div className="hidden">
 				{PACKAGES.map((pkg) => {
 					const tierColors = ['#10b981', '#22d3ee', '#f59e0b', '#eab308', '#3b82f6', '#8b5cf6'];
 					const tierColor = tierColors[PACKAGES.indexOf(pkg)] || '#22d3ee';
@@ -138,7 +155,8 @@ export default function PackagesPage() {
 							</span>
 							<div className="grid grid-cols-2 gap-3 mb-4 text-sm text-slate-300">
 								<div className="flex items-center gap-1">
-									<span className="text-white">📶</span> {pkg.dataMb} MB
+									<span className="text-cyan-300">∞</span>{' '}
+									{pkg.dataLimitMB === null ? 'Unlimited Data' : `${pkg.dataLimitMB} MB`}
 								</div>
 								<div className="flex items-center gap-1">
 									<span className="text-white">⏱</span> {pkg.durationMin} min
@@ -154,7 +172,7 @@ export default function PackagesPage() {
 									handleBuy(pkg);
 								}}
 								type="button"
-								className="w-full min-h-14 px-6 py-4 rounded-xl border-2 border-cyan-300/70 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white text-lg font-extrabold uppercase tracking-wide shadow-neon-cyan hover:from-cyan-400 hover:to-purple-500 active:scale-[0.98] transition-all"
+								className="w-full min-h-14 px-6 py-4 rounded-xl border-2 border-cyan-300/70 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-extrabold uppercase tracking-wide shadow-neon-cyan hover:from-cyan-400 hover:to-blue-500 active:scale-[0.98] transition-all"
 							>
 								Buy Package
 							</button>
@@ -162,6 +180,8 @@ export default function PackagesPage() {
 					);
 				})}
 			</div>
+
+			<MpesaCheckoutModal package={selected} onClose={() => { setModalOpen(false); setSelected(null); }} />
 
 			<div className="mt-12 border-t border-white/5 pt-8 grid md:grid-cols-3 gap-8 text-center">
 				{[Wifi, Smartphone, CreditCard].map((Icon) => (
@@ -185,7 +205,7 @@ export default function PackagesPage() {
 				className={`fixed inset-0 z-[60] flex items-center justify-center ${modalOpen ? '' : 'hidden'}`}
 			>
 				<div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)} />
-				<div className="relative w-full max-w-md p-6 rounded-3xl bg-obsidian-950 border border-white/10 shadow-neon-violet">
+				<div className="relative w-full max-w-md p-6 rounded-3xl bg-obsidian-950 border border-white/10 shadow-neon-cyan">
 					<div className="flex items-center justify-between mb-6">
 						<h3 className="text-lg font-bold text-white">M-Pesa STK Push</h3>
 						<button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">
@@ -206,8 +226,8 @@ export default function PackagesPage() {
 								<input
 									type="tel"
 									id="modalPhone"
-									value=""
-									onChange={(e) => (document.getElementById('modalPhone') as HTMLInputElement).value = e.target.value.replace(/\D/g, '')}
+									defaultValue={typeof window !== 'undefined' ? localStorage.getItem('smart-wifi-phone') || '' : ''}
+									onChange={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); }}
 									placeholder="0712345678"
 									className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
 									maxLength={10}

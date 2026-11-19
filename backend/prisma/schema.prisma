@@ -59,6 +59,7 @@ model User {
   updatedAt   DateTime  @updatedAt
 
   sessions     Session[]
+  activeSessions ActiveSession[]
   transactions Transaction[]
   loans        Loan[]
   auditLogs    AuditLog[]
@@ -72,15 +73,19 @@ model Package {
   id          String   @id() @default(uuid()) @db.Uuid
   name        String
   description String?
-  dataMb      Int
+  dataMb      Int?
+  dataLimitMB Int?
   durationMin Int
   speedMbps   Int
+  maxDevices  Int      @default(1)
   price       Decimal  @db.Decimal(10, 2)
   currency    String   @default("KES")
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
   transactions Transaction[]
+  activeSessions ActiveSession[]
+  sessions    Session[]
 
   @@index([isActive])
 }
@@ -97,7 +102,10 @@ model Transaction {
   checkoutRequestId String? @unique
   phone           String?
   description     String?
+  failureReason   String?
   provisioned     Boolean  @default(false)
+  expiresAt       DateTime?
+  durationMin     Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -109,6 +117,7 @@ model Transaction {
   @@index([checkoutRequestId])
   @@index([mpesaReceipt])
   @@index([createdAt])
+  @@index([phone, status, expiresAt])
 }
 
 model Loan {
@@ -152,6 +161,38 @@ model Session {
   @@index([ipAddress])
   @@index([macAddress])
   @@index([startTime])
+}
+
+model ActiveSession {
+  id          String   @id() @default(uuid()) @db.Uuid
+  userId      String?  @db.Uuid
+  packageId   String   @db.Uuid
+  macAddress  String
+  ipAddress   String?
+  startedAt   DateTime @default(now())
+  expiresAt   DateTime
+  status      MikroTikSessionStatus @default(ACTIVE)
+  lastSeenAt  DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  package     Package  @relation(fields: [packageId], references: [id])
+  deviceBinding DeviceBinding?
+
+  @@unique([packageId, macAddress])
+  @@index([macAddress, status])
+  @@index([expiresAt, status])
+}
+
+model DeviceBinding {
+  id              String   @id() @default(uuid()) @db.Uuid
+  activeSessionId String   @unique @db.Uuid
+  macAddress      String
+  boundAt         DateTime @default(now())
+  releasedAt      DateTime?
+
+  activeSession ActiveSession @relation(fields: [activeSessionId], references: [id], onDelete: Cascade)
+
+  @@index([macAddress])
 }
 
 model AuditLog {

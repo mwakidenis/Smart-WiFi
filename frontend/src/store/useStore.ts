@@ -21,7 +21,7 @@ export interface Package {
   id: string;
   name: string;
   description?: string;
-  dataMb: number;
+  dataLimitMB: number | null;
   durationMin: number;
   speedMbps: number;
   price: number;
@@ -121,8 +121,8 @@ export const usePackageStore = create<PackageState>((set) => ({
       const { api } = await import('@/lib/api');
       const res = await api.packageApi.list();
       set({ packages: res.data.packages || [], isLoading: false });
-    } catch (err: any) {
-      set({ isLoading: false, error: err.message });
+    } catch (err: unknown) {
+      set({ isLoading: false, error: err instanceof Error ? err.message : 'Failed to load packages' });
     }
   },
 }));

@@ -59,6 +59,13 @@ export const paymentApi = {
     api.post('/mpesa/callback', body),
 };
 
+export const sessionApi = {
+  status: (params: { macAddress?: string | null; ipAddress?: string | null }) =>
+    api.get('/session/status', { params }),
+  restore: (body: { phone?: string; mpesaReceiptNumber?: string; macAddress: string }) =>
+    api.post('/session/restore', body),
+};
+
 export const loanApi = {
   eligibility: () => api.get('/loans/eligibility'),
   borrow: (body: { amount: number }) => api.post('/api/loans/borrow', body),

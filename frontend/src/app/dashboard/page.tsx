@@ -4,12 +4,17 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { Wallet, Smartphone, Wifi, Clock, Activity, Cpu, Memory, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Wallet, Smartphone, Wifi } from 'lucide-react';
+import { NetworkStatusHero } from '@/components/NetworkStatusHero';
+import { SessionRestoreModal } from '@/components/SessionRestoreModal';
+import { usePortalSession } from '@/hooks/usePortalSession';
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ name: string; phone: string; balance?: number; creditUsed?: number; role: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [routerHealth, setRouterHealth] = useState<any>(null);
+  const { status, setManualMac } = usePortalSession();
+  const [manualMac, setManualMacInput] = useState('');
+  const [restoreOpen, setRestoreOpen] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -18,26 +23,11 @@ export default function DashboardPage() {
   async function loadProfile() {
     try {
       const res = await api.auth.me();
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-      }
+      setUser(res.data.user);
     } catch {
       toast.error('Session expired');
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function loadRouterHealth() {
-    try {
-      const res = await api.admin.routerHealth();
-      if (res.ok) {
-        const data = await res.json();
-        setRouterHealth(data.routerHealth);
-      }
-    } catch {
-      // Admin only endpoint, may fail for non-admin
     }
   }
 
@@ -59,13 +49,21 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen px-6 py-8">
+      <NetworkStatusHero {...status} />
+      <button type="button" onClick={() => setRestoreOpen(true)} className="mt-4 rounded-xl border border-cyan-300/30 px-4 py-2 text-sm font-bold text-cyan-300 hover:bg-cyan-300/10">Restore session</button>
+      {status.state === 'DISCONNECTED' && (
+        <form className="mt-6 flex max-w-xl gap-3" onSubmit={(event) => { event.preventDefault(); setManualMac(manualMac); }}>
+          <input value={manualMac} onChange={(event) => setManualMacInput(event.target.value)} placeholder="Device MAC (AA:BB:CC:DD:EE:FF)" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-sm text-white outline-none focus:border-cyan-300" />
+          <button type="submit" className="rounded-xl bg-cyan-400 px-4 py-3 font-bold text-black">Reconnect</button>
+        </form>
+      )}
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="text-slate-400 text-sm">Welcome back, {user.name}</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="glass-card px-4 py-3">
+              <div className="glass-card px-4 py-3">
             <div className="text-xs text-slate-400">Balance</div>
             <div className="text-lg font-bold text-white">KES {Number(user.balance || 0).toLocaleString()}</div>
           </div>
@@ -75,6 +73,8 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
+
+      <SessionRestoreModal open={restoreOpen} macAddress={status.macAddress} onClose={() => setRestoreOpen(false)} />
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="glass-card p-6">
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         </div>
         <div className="glass-card p-6">
           <div className="flex items-center gap-3 mb-4">
-            <Smartphone className="w-5 h-5 text-violet-400" />
+            <Smartphone className="w-5 h-5 text-cyan-300" />
             <h3 className="text-lg font-bold text-white">Phone</h3>
           </div>
           <div className="text-xl font-mono text-white">{user.phone}</div>
@@ -100,29 +100,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {routerHealth && (
-        <div className="mt-8 glass-card p-6">
-          <h3 className="text-lg font-bold text-white mb-4">Router Health</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-white/5 bg-white/3 p-4">
-              <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">CPU Load</div>
-              <div className="text-lg font-bold text-white">{Math.round(Number(routerHealth.resource?.cpuLoad || 0))}%</div>
-            </div>
-            <div className="rounded-2xl border border-white/5 bg-white/3 p-4">
-              <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Memory</div>
-              <div className="text-lg font-bold text-white">
-                {Math.round(Number(routerHealth.resource?.totalMemory || 0) / 1024 / 1024)} MB
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/5 bg-white/3 p-4">
-              <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Uptime</div>
-              <div className="text-lg font-bold text-white">
-                {Math.round(Number(routerHealth.resource?.uptime || 0) / 60)} min
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

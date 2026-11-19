@@ -23,11 +23,19 @@ export default function RootLayout({
           <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a0c]/80 backdrop-blur-md py-4 px-6">
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 flex items-center justify-center shadow-neon-cyan">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-neon-cyan">
                   <WifiIcon />
                 </div>
-                <span className="font-bold text-xl text-white tracking-tight">
-                  Smart<span className="text-cyan-400">Wifi</span>
+                <span className="font-bold text-xl tracking-tight" aria-label="SmartWifi">
+                  <span style={{ color: '#a7adb5' }}>S</span>
+                  <span style={{ color: '#94a3b8' }}>m</span>
+                  <span style={{ color: '#b8bdc5' }}>a</span>
+                  <span style={{ color: '#8993a1' }}>r</span>
+                  <span style={{ color: '#aab0b8' }}>t</span>
+                  <span style={{ color: '#8d96a3' }}>W</span>
+                  <span style={{ color: '#b1b5bc' }}>i</span>
+                  <span style={{ color: '#969fa9' }}>f</span>
+                  <span style={{ color: '#afb4bb' }}>i</span>
                 </span>
               </Link>
               <nav className="hidden md:flex items-center gap-6 text-sm">
@@ -63,8 +71,8 @@ export default function RootLayout({
             </div>
           </footer>
         </body>
-      </NextThemesProvider>
-    </ThemeProvider>
+      </html>
+    </NextThemesProvider>
   );
 }
 
